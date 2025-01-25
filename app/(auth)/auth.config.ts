@@ -18,17 +18,20 @@ export const authConfig = {
       const isOnRegister = nextUrl.pathname.startsWith('/register');
       const isOnLogin = nextUrl.pathname.startsWith('/login');
 
+      // Rule 1: If logged in, don't allow access to login/register pages
       if (isLoggedIn && (isOnLogin || isOnRegister)) {
         return Response.redirect(new URL('/', nextUrl as unknown as URL));
       }
 
+      // Rule 2: Anyone can access login/register pages
       if (isOnRegister || isOnLogin) {
-        return true; // Always allow access to register and login pages
+        return true;
       }
 
+      // Rule 3: Chat pages need authentication
       if (isOnChat) {
         if (isLoggedIn) return true;
-        return false; // Redirect unauthenticated users to login page
+        return false; // Will redirect to login
       }
 
       if (isLoggedIn) {

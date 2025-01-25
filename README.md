@@ -62,3 +62,57 @@ pnpm dev
 
 
 Your app template should now be running on [localhost:3000](http://localhost:3000/).
+
+### Adding Anthropic as a provider
+
+To add Anthropic as a provider, follow these steps:
+
+1. Add the Anthropic SDK package to your dependencies:
+
+```bash
+pnpm add @ai-sdk/anthropic
+```
+
+2. Add your Anthropic API key to your environment variables (`.env.local`):
+
+```bash
+ANTHROPIC_API_KEY=your_api_key_here
+```
+
+3. Update your `lib/ai/models.ts` to include Anthropic models:
+
+```typescript
+export const models: Array<Model> = [
+  // ... existing models ...
+  {
+    id: 'claude-3-opus',
+    label: 'Claude 3 Opus',
+    apiIdentifier: 'claude-3-opus-20240229',
+    description: 'Most powerful Anthropic model for complex tasks',
+  },
+  {
+    id: 'claude-3-sonnet',
+    label: 'Claude 3 Sonnet',
+    apiIdentifier: 'claude-3-sonnet-20240229',
+    description: 'Balanced Anthropic model for most tasks',
+  }
+];
+```
+
+4. Update your `lib/ai/index.ts` to handle Anthropic models:
+
+```typescript
+import { anthropic } from '@ai-sdk/anthropic';
+
+export const customModel = (apiIdentifier: string) => {
+  if (apiIdentifier.startsWith('claude-')) {
+    return wrapLanguageModel({
+      model: anthropic(apiIdentifier),
+      middleware: customMiddleware,
+    });
+  }
+  // ... existing OpenAI logic ...
+};
+```
+
+After completing these steps, you'll be able to use Anthropic's Claude models alongside OpenAI models in your chatbot. The model selector in the UI will automatically include the new Anthropic options.

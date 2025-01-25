@@ -20,6 +20,18 @@ export const models: Array<Model> = [
     apiIdentifier: 'gpt-4o',
     description: 'For complex, multi-step tasks',
   },
+  {
+    id: 'claude-3-opus',
+    label: 'Claude 3 Opus',
+    apiIdentifier: 'claude-3-opus-20240229',
+    description: 'Most powerful Anthropic model for complex tasks',
+  },
+  {
+    id: 'claude-3-5-sonnet',
+    label: 'Claude 3 Sonnet',
+    apiIdentifier: 'claude-3-5-sonnet-latest',
+    description: 'Balanced Anthropic model for most tasks',
+  }
 ] as const;
 
 export const DEFAULT_MODEL_NAME: string = 'gpt-4o-mini';
