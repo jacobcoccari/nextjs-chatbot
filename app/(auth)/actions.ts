@@ -60,12 +60,17 @@ export const register = async (
       email: formData.get('email'),
       password: formData.get('password'),
     });
-
-    const [user] = await getUser(validatedData.email);
-
-    if (user) {
-      return { status: 'user_exists' } as RegisterActionState;
+    console.log("_____REGISTER_CALLED____________________");
+    try {
+      const [user] = await getUser(validatedData.email);
+      if (user) {
+        return { status: 'user_exists' } as RegisterActionState;
+      }
+    } catch (error) {
+      console.log("_____REGISTER_CALLED_ERROR____________________");
     }
+
+
     await createUser(validatedData.email, validatedData.password);
     await signIn('credentials', {
       email: validatedData.email,
