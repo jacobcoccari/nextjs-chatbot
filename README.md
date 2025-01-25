@@ -55,7 +55,10 @@ You will need to use the environment variables [defined in `.env.example`](.env.
 
 ```bash
 pnpm install
+# Don't forget to run your db migrations!
+pnpm db:migrate
 pnpm dev
 ```
+
 
 Your app template should now be running on [localhost:3000](http://localhost:3000/).
