@@ -1,13 +1,14 @@
-'use client';
+'use client'; // This indicates that the component is a client-side component in a Next.js application.
 
 import type {
   Attachment,
   ChatRequestOptions,
   CreateMessage,
   Message,
-} from 'ai';
-import cx from 'classnames';
-import type React from 'react';
+} from 'ai'; // Importing types for better type-checking and clarity.
+
+import cx from 'classnames'; // Utility for conditionally joining class names.
+import type React from 'react'; // Importing React types.
 import {
   useRef,
   useEffect,
@@ -17,18 +18,19 @@ import {
   type SetStateAction,
   type ChangeEvent,
   memo,
-} from 'react';
-import { toast } from 'sonner';
-import { useLocalStorage, useWindowSize } from 'usehooks-ts';
+} from 'react'; // React hooks and types for managing state and lifecycle.
 
-import { sanitizeUIMessages } from '@/lib/utils';
+import { toast } from 'sonner'; // A library for displaying toast notifications.
+import { useLocalStorage, useWindowSize } from 'usehooks-ts'; // Custom hooks for local storage and window size.
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
-import { PreviewAttachment } from './preview-attachment';
-import { Button } from './ui/button';
-import { Textarea } from './ui/textarea';
-import { SuggestedActions } from './suggested-actions';
-import equal from 'fast-deep-equal';
+import { sanitizeUIMessages } from '@/lib/utils'; // Utility function to sanitize messages.
+
+import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons'; // Importing icons for UI components.
+import { PreviewAttachment } from './preview-attachment'; // Component to preview attachments.
+import { Button } from './ui/button'; // Button component.
+import { Textarea } from './ui/textarea'; // Textarea component.
+import { SuggestedActions } from './suggested-actions'; // Component for suggested actions.
+import equal from 'fast-deep-equal'; // Utility for deep comparison of objects.
 
 function PureMultimodalInput({
   chatId,
@@ -65,71 +67,68 @@ function PureMultimodalInput({
   ) => void;
   className?: string;
 }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { width } = useWindowSize();
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // Ref to access the textarea DOM element.
+  const { width } = useWindowSize(); // Hook to get the current window size.
 
   useEffect(() => {
     if (textareaRef.current) {
-      adjustHeight();
+      adjustHeight(); // Adjust the height of the textarea on component mount.
     }
   }, []);
 
   const adjustHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
+      textareaRef.current.style.height = 'auto'; // Reset height to auto to calculate scroll height.
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`; // Set height based on scroll height.
     }
   };
 
   const resetHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px';
+      textareaRef.current.style.height = 'auto'; // Reset height to auto.
+      textareaRef.current.style.height = '98px'; // Set a default height.
     }
   };
 
   const [localStorageInput, setLocalStorageInput] = useLocalStorage(
     'input',
     '',
-  );
+  ); // Hook to manage input state with local storage.
 
   useEffect(() => {
     if (textareaRef.current) {
       const domValue = textareaRef.current.value;
-      // Prefer DOM value over localStorage to handle hydration
-      const finalValue = domValue || localStorageInput || '';
+      const finalValue = domValue || localStorageInput || ''; // Prefer DOM value over localStorage for hydration.
       setInput(finalValue);
       adjustHeight();
     }
-    // Only run once after hydration
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // Run once after hydration.
 
   useEffect(() => {
-    setLocalStorageInput(input);
+    setLocalStorageInput(input); // Update local storage whenever input changes.
   }, [input, setLocalStorageInput]);
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(event.target.value);
-    adjustHeight();
+    setInput(event.target.value); // Update input state on change.
+    adjustHeight(); // Adjust textarea height.
   };
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for file input element.
+  const [uploadQueue, setUploadQueue] = useState<Array<string>>([]); // State to manage files being uploaded.
 
   const submitForm = useCallback(() => {
-    window.history.replaceState({}, '', `/chat/${chatId}`);
+    window.history.replaceState({}, '', `/chat/${chatId}`); // Update browser history.
 
     handleSubmit(undefined, {
-      experimental_attachments: attachments,
+      experimental_attachments: attachments, // Pass attachments to handleSubmit.
     });
 
-    setAttachments([]);
-    setLocalStorageInput('');
-    resetHeight();
+    setAttachments([]); // Clear attachments after submission.
+    setLocalStorageInput(''); // Clear local storage input.
+    resetHeight(); // Reset textarea height.
 
     if (width && width > 768) {
-      textareaRef.current?.focus();
+      textareaRef.current?.focus(); // Focus textarea if window width is greater than 768px.
     }
   }, [
     attachments,
@@ -142,12 +141,12 @@ function PureMultimodalInput({
 
   const uploadFile = async (file: File) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', file); // Append file to form data.
 
     try {
       const response = await fetch('/api/files/upload', {
         method: 'POST',
-        body: formData,
+        body: formData, // Send form data to server.
       });
 
       if (response.ok) {
@@ -158,24 +157,24 @@ function PureMultimodalInput({
           url,
           name: pathname,
           contentType: contentType,
-        };
+        }; // Return file details on successful upload.
       }
       const { error } = await response.json();
-      toast.error(error);
+      toast.error(error); // Show error toast if upload fails.
     } catch (error) {
-      toast.error('Failed to upload file, please try again!');
+      toast.error('Failed to upload file, please try again!'); // Show error toast on exception.
     }
   };
 
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(event.target.files || []);
+      const files = Array.from(event.target.files || []); // Convert FileList to array.
 
-      setUploadQueue(files.map((file) => file.name));
+      setUploadQueue(files.map((file) => file.name)); // Update upload queue with file names.
 
       try {
-        const uploadPromises = files.map((file) => uploadFile(file));
-        const uploadedAttachments = await Promise.all(uploadPromises);
+        const uploadPromises = files.map((file) => uploadFile(file)); // Create upload promises for each file.
+        const uploadedAttachments = await Promise.all(uploadPromises); // Wait for all uploads to complete.
         const successfullyUploadedAttachments = uploadedAttachments.filter(
           (attachment) => attachment !== undefined,
         );
@@ -183,11 +182,11 @@ function PureMultimodalInput({
         setAttachments((currentAttachments) => [
           ...currentAttachments,
           ...successfullyUploadedAttachments,
-        ]);
+        ]); // Update attachments with successfully uploaded files.
       } catch (error) {
-        console.error('Error uploading files!', error);
+        console.error('Error uploading files!', error); // Log error if upload fails.
       } finally {
-        setUploadQueue([]);
+        setUploadQueue([]); // Clear upload queue.
       }
     },
     [setAttachments],
@@ -198,7 +197,7 @@ function PureMultimodalInput({
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions append={append} chatId={chatId} />
+          <SuggestedActions append={append} chatId={chatId} /> // Show suggested actions if no messages, attachments, or uploads.
         )}
 
       <input
@@ -213,7 +212,7 @@ function PureMultimodalInput({
       {(attachments.length > 0 || uploadQueue.length > 0) && (
         <div className="flex flex-row gap-2 overflow-x-scroll items-end">
           {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
+            <PreviewAttachment key={attachment.url} attachment={attachment} /> // Preview each attachment.
           ))}
 
           {uploadQueue.map((filename) => (
@@ -224,7 +223,7 @@ function PureMultimodalInput({
                 name: filename,
                 contentType: '',
               }}
-              isUploading={true}
+              isUploading={true} // Indicate that the file is uploading.
             />
           ))}
         </div>
@@ -246,26 +245,26 @@ function PureMultimodalInput({
             event.preventDefault();
 
             if (isLoading) {
-              toast.error('Please wait for the model to finish its response!');
+              toast.error('Please wait for the model to finish its response!'); // Show error if model is still processing.
             } else {
-              submitForm();
+              submitForm(); // Submit form on Enter key press.
             }
           }
         }}
       />
 
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
-        <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} />
+        <AttachmentsButton fileInputRef={fileInputRef} isLoading={isLoading} /> // Button to trigger file input.
       </div>
 
       <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
         {isLoading ? (
-          <StopButton stop={stop} setMessages={setMessages} />
+          <StopButton stop={stop} setMessages={setMessages} /> // Button to stop loading.
         ) : (
           <SendButton
             input={input}
             submitForm={submitForm}
-            uploadQueue={uploadQueue}
+            uploadQueue={uploadQueue} // Button to send message.
           />
         )}
       </div>
@@ -276,11 +275,11 @@ function PureMultimodalInput({
 export const MultimodalInput = memo(
   PureMultimodalInput,
   (prevProps, nextProps) => {
-    if (prevProps.input !== nextProps.input) return false;
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (!equal(prevProps.attachments, nextProps.attachments)) return false;
+    if (prevProps.input !== nextProps.input) return false; // Re-render if input changes.
+    if (prevProps.isLoading !== nextProps.isLoading) return false; // Re-render if loading state changes.
+    if (!equal(prevProps.attachments, nextProps.attachments)) return false; // Re-render if attachments change.
 
-    return true;
+    return true; // Otherwise, do not re-render.
   },
 );
 
@@ -296,12 +295,12 @@ function PureAttachmentsButton({
       className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
       onClick={(event) => {
         event.preventDefault();
-        fileInputRef.current?.click();
+        fileInputRef.current?.click(); // Trigger file input click.
       }}
-      disabled={isLoading}
+      disabled={isLoading} // Disable button if loading.
       variant="ghost"
     >
-      <PaperclipIcon size={14} />
+      <PaperclipIcon size={14} /> // Icon for attachments.
     </Button>
   );
 }
@@ -320,11 +319,11 @@ function PureStopButton({
       className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
       onClick={(event) => {
         event.preventDefault();
-        stop();
-        setMessages((messages) => sanitizeUIMessages(messages));
+        stop(); // Stop the current process.
+        setMessages((messages) => sanitizeUIMessages(messages)); // Sanitize messages.
       }}
     >
-      <StopIcon size={14} />
+      <StopIcon size={14} /> // Icon for stopping.
     </Button>
   );
 }
@@ -345,18 +344,18 @@ function PureSendButton({
       className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
       onClick={(event) => {
         event.preventDefault();
-        submitForm();
+        submitForm(); // Submit the form.
       }}
-      disabled={input.length === 0 || uploadQueue.length > 0}
+      disabled={input.length === 0 || uploadQueue.length > 0} // Disable if no input or files are uploading.
     >
-      <ArrowUpIcon size={14} />
+      <ArrowUpIcon size={14} /> // Icon for sending.
     </Button>
   );
 }
 
 const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
-    return false;
-  if (prevProps.input !== nextProps.input) return false;
-  return true;
+    return false; // Re-render if upload queue changes.
+  if (prevProps.input !== nextProps.input) return false; // Re-render if input changes.
+  return true; // Otherwise, do not re-render.
 });
